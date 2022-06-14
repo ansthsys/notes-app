@@ -3,7 +3,7 @@ const {
 	show, 
 	store, 
 	update,
-	deleteById
+	deleteByUID
 } = require('./handler')
 
 const routes = [
@@ -24,7 +24,7 @@ const routes = [
 },
 {
 	method : "GET",
-	path : "/notes/{id}",
+	path : "/notes/{uid}",
 	handler : show,
 },
 {
@@ -34,13 +34,13 @@ const routes = [
 },
 {
 	method : "PUT",
-	path : "/notes/{id}",
+	path : "/notes/{uid}",
 	handler : update
 },
 {
 	method : "DELETE",
-	path : "/notes/{id}",
-	handler : deleteById
+	path : "/notes/{uid}",
+	handler : deleteByUID
 }
 ]
 

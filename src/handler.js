@@ -1,7 +1,8 @@
+const crypto = require('crypto')
 const { QueryTypes } = require('sequelize')
 const sequelize = require('./db/conn')
 
-const index = async (request, h) =>{
+const index = async (h) =>{
 	try {
 		const notes = await sequelize.query('SELECT * FROM notes', { 
 			type: QueryTypes.SELECT 
@@ -19,14 +20,14 @@ const index = async (request, h) =>{
 
 const show = async (request, h) => {
 	try {
-		const { id } = request.params
-		const notes = await sequelize.query('SELECT * FROM notes WHERE id = :id', { 
-			replacements : { id },
+		const { uid } = request.params
+		const notes = await sequelize.query('SELECT * FROM notes WHERE uid = :uid', { 
+			replacements : { uid },
 			type: QueryTypes.SELECT 
 		})
 
 		return h.response({
-			message : "success showing data by id",
+			message : "success showing data by uid",
 			statusCode : 200,
 			data : notes[0]
 		}).code(200)
@@ -38,17 +39,17 @@ const show = async (request, h) => {
 const store = async (request, h) => {
 	try {
 		const { title, tags, body } = request.payload
-		const note = await sequelize.query(
-			'INSERT INTO `notes` (`title`, `tags`, `body`) VALUES (:title, :tags, :body);',
-			{
-				replacements: { title, tags, body },
+		const uid = crypto.randomUUID()
+		await sequelize.query(
+			'INSERT INTO `notes` (`uid`, `title`, `tags`, `body`) VALUES (:uid, :title, :tags, :body);', {
+				replacements: { uid, title, tags, body },
 				type: QueryTypes.INSERT
 			})
 
 		return h.response({
 			message : "success add new note",
 			statusCode : 201,
-			data : { title, tags, body }
+			data : { uid, title, tags, body }
 		}).code(201)
 	} catch (err) {
 		console.error(err.message)
@@ -57,11 +58,11 @@ const store = async (request, h) => {
 
 const update = async (request, h) => {
 	try {
-		const { id } = request.params
+		const { uid } = request.params
 		const { title, tags, body } = request.payload
-		const sql = "UPDATE `notes` SET `title`= :title,`tags`= :tags,`body`= :body,`updatedAt`=current_timestamp() WHERE `id` = :id"
-		const notes = await sequelize.query(sql, { 
-			replacements : { id, title, tags, body },
+		const sql = "UPDATE `notes` SET `title`= :title,`tags`= :tags,`body`= :body,`updatedAt`=current_timestamp() WHERE `uid` = :uid"
+		await sequelize.query(sql, { 
+			replacements : { uid, title, tags, body },
 			type: QueryTypes.UPDATE 
 		})
 
@@ -75,11 +76,11 @@ const update = async (request, h) => {
 	}
 }
 
-const deleteById = async (request, h) => {
+const deleteByUID = async (request, h) => {
 	try {
-		const { id } = request.params
-		const note = await sequelize.query('DELETE FROM `notes` WHERE `notes`.`id` = :id', {
-			replacements : { id },
+		const { uid } = request.params
+		await sequelize.query('DELETE FROM `notes` WHERE `notes`.`uid` = :uid', {
+			replacements : { uid },
 			type: QueryTypes.DELETE
 		})
 
@@ -92,4 +93,4 @@ const deleteById = async (request, h) => {
 	}
 }
 
-module.exports = { index, show, store, update, deleteById }
+module.exports = { index, show, store, update, deleteByUID }
